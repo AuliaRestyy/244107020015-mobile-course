@@ -1,3 +1,5 @@
+# Week 2 - Declarative UI & Responsive Design
+
 ## Warmup
 
 ### 1. Remove Expanded
