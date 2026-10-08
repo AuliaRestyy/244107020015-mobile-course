@@ -6,5 +6,8 @@ class AnnouncementPage extends StatelessWidget {
   final String id;
 
   @override
-  Widget build(BuildContext context) => const Scaffold();
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text('Pengumuman #$id')),
+    body: Center(child: Text('Deep link masuk ke /pengumuman/$id')),
+  );
 }

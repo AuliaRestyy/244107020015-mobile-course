@@ -27,14 +27,16 @@ A Flutter Campus Notification App using firebase_messaging, flutter_local_notifi
 
 ### Testing   
 
-![Testing](screenshots/testing.png)
+<img src="screenshots/testing.png">
 
-### Result Display
-![Display](screenshots/display-satu.png)
-![Display](screenshots/display-dua.png)
-![Display](screenshots/display-tiga.png)
-![Display](screenshots/display-empat.png)
-![Display](screenshots/display-lima.png)
+### Hasil yang Dicapai (Result Display)
+
+<img src="screenshots/login.jpeg" width="300">
+<img src="screenshots/login_error.jpeg" width="300">
+<img src="screenshots/login_success.jpeg" width="300">
+<img src="screenshots/allow.jpeg" width="300">
+<img src="screenshots/notif.jpeg" width="300">
+<img src="screenshots/deep.jpeg" width="300">
 
 ### Reflection
 

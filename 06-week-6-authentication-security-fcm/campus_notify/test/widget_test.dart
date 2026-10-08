@@ -9,7 +9,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(LoginPage), findsOneWidget);
   });
