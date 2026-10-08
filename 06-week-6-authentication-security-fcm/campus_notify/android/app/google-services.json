@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028485685858",
+    "project_id": "practice-resty",
+    "storage_bucket": "practice-resty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028485685858:android:a1630a961dcb32baeee73b",
+        "android_client_info": {
+          "package_name": "com.example.campus_notify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBR7tW3sBE1VO_T20WS08BP_gKpi38su0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
