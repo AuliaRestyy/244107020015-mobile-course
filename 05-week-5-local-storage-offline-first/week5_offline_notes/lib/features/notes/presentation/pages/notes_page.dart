@@ -6,6 +6,8 @@ import '../../../../core/providers.dart';
 import '../../../../routes.dart';
 import '../providers/notes_providers.dart';
 import '../widgets/note_tile.dart';
+import '../widgets/notes_empty_state.dart';
+import '../widgets/notes_search_field.dart';
 
 class NotesPage extends ConsumerWidget {
   const NotesPage({super.key});
@@ -32,8 +34,8 @@ class NotesPage extends ConsumerWidget {
           failure != null
               ? 'Sinkronisasi gagal: ${failure.message}'
               : result.synced == 0
-                  ? 'Tidak ada catatan untuk disinkronkan.'
-                  : '${result.synced} catatan tersinkron. Badge kembali ke 0.',
+              ? 'Tidak ada catatan untuk disinkronkan.'
+              : '${result.synced} catatan tersinkron. Badge kembali ke 0.',
         ),
       ),
     );
@@ -63,8 +65,9 @@ class NotesPage extends ConsumerWidget {
                 controller: titleController,
                 autofocus: true,
                 decoration: const InputDecoration(labelText: 'Judul'),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Judul wajib' : null,
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Judul wajib'
+                    : null,
               ),
               TextFormField(
                 controller: bodyController,
@@ -105,9 +108,10 @@ class NotesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notes = ref.watch(notesProvider);
+    final notes = ref.watch(filteredNotesProvider);
     final dirtyCount = ref.watch(dirtyCountProvider).value ?? 0;
     final offline = ref.watch(forceOfflineProvider);
+    final query = ref.watch(searchQueryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -148,35 +152,36 @@ class NotesPage extends ConsumerWidget {
                 ),
               ),
             ),
+          const NotesSearchField(),
           Expanded(
             child: notes.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => _ErrorView(error: error),
-              data: (items) => items.isEmpty
-                  ? const _EmptyView()
-                  : ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final note = items[index];
-                        return NoteTile(
-                          note: note,
-                          onTap: () =>
-                              context.go(AppRoutes.noteDetail(note.id!)),
-                          onDelete: () async {
-                            await ref
-                                .read(notesProvider.notifier)
-                                .deleteNote(note.id!);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Catatan dihapus.'),
-                                ),
-                              );
-                            }
-                          },
-                        );
+              data: (items) {
+                if (items.isEmpty) {
+                  return NotesEmptyState(query: query);
+                }
+                return ListView.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final note = items[index];
+                    return NoteTile(
+                      note: note,
+                      onTap: () => context.go(AppRoutes.noteDetail(note.id!)),
+                      onDelete: () async {
+                        await ref
+                            .read(notesProvider.notifier)
+                            .deleteNote(note.id!);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Catatan dihapus.')),
+                          );
+                        }
                       },
-                    ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -203,39 +208,15 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                size: 48, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 12),
-            Text(
-              'Gagal memuat catatan:\n$error',
-              textAlign: TextAlign.center,
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
             ),
+            const SizedBox(height: 12),
+            Text('Gagal memuat catatan:\n$error', textAlign: TextAlign.center),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.note_alt_outlined,
-              size: 64, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(height: 12),
-          const Text('Belum ada catatan.\nKetuk + untuk menulis.'),
-          const SizedBox(height: 8),
-          Text(
-            'Semua fitur tetap berfungsi dalam mode pesawat.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
       ),
     );
   }

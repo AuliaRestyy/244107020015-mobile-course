@@ -7,18 +7,22 @@ import '../../domain/entities/note.dart';
 import '../../domain/repositories/note_repository.dart';
 import '../../domain/usecases/add_note.dart';
 import '../../domain/usecases/get_notes.dart';
+import '../../domain/usecases/search_notes.dart';
 import '../../domain/usecases/sync_notes.dart';
 
 final noteRepositoryProvider = Provider<NoteRepository>(
   (ref) => NoteRepositoryImpl(openDb: ref.watch(appDatabaseProvider)),
 );
 
-final getNotesProvider =
-    Provider<GetNotes>((ref) => GetNotes(ref.watch(noteRepositoryProvider)));
-final addNoteProvider =
-    Provider<AddNote>((ref) => AddNote(ref.watch(noteRepositoryProvider)));
-final syncNotesProvider =
-    Provider<SyncNotes>((ref) => SyncNotes(ref.watch(noteRepositoryProvider)));
+final getNotesProvider = Provider<GetNotes>(
+  (ref) => GetNotes(ref.watch(noteRepositoryProvider)),
+);
+final addNoteProvider = Provider<AddNote>(
+  (ref) => AddNote(ref.watch(noteRepositoryProvider)),
+);
+final syncNotesProvider = Provider<SyncNotes>(
+  (ref) => SyncNotes(ref.watch(noteRepositoryProvider)),
+);
 
 class NotesNotifier extends AsyncNotifier<List<Note>> {
   @override
@@ -38,8 +42,9 @@ class NotesNotifier extends AsyncNotifier<List<Note>> {
   }
 
   Future<void> addNote({required String title, String body = ''}) async {
-    final result =
-        await ref.read(addNoteProvider).call(title: title, body: body);
+    final result = await ref
+        .read(addNoteProvider)
+        .call(title: title, body: body);
     if (result.failure != null) throw Exception(result.failure!.message);
     await refresh();
     await ref.read(dirtyCountProvider.notifier).refresh();
@@ -72,8 +77,28 @@ class NotesNotifier extends AsyncNotifier<List<Note>> {
   }
 }
 
-final notesProvider =
-    AsyncNotifierProvider<NotesNotifier, List<Note>>(NotesNotifier.new);
+final notesProvider = AsyncNotifierProvider<NotesNotifier, List<Note>>(
+  NotesNotifier.new,
+);
+
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void setQuery(String value) => state = value;
+}
+
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
+
+final searchNotesProvider = Provider<SearchNotes>((ref) => const SearchNotes());
+
+final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
+  final query = ref.watch(searchQueryProvider);
+  final search = ref.watch(searchNotesProvider);
+  return ref.watch(notesProvider).whenData((items) => search(items, query));
+});
 
 class DirtyCountNotifier extends AsyncNotifier<int> {
   @override
@@ -92,8 +117,9 @@ class DirtyCountNotifier extends AsyncNotifier<int> {
   }
 }
 
-final dirtyCountProvider =
-    AsyncNotifierProvider<DirtyCountNotifier, int>(DirtyCountNotifier.new);
+final dirtyCountProvider = AsyncNotifierProvider<DirtyCountNotifier, int>(
+  DirtyCountNotifier.new,
+);
 
 final noteProvider = FutureProvider.family<Note?, int>((ref, id) async {
   final result = await ref.watch(noteRepositoryProvider).getNote(id);

@@ -1,36 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:week5_offline_notes/core/failures.dart';
+import 'package:week5_offline_notes/features/notes/domain/entities/note.dart';
+import 'package:week5_offline_notes/features/notes/domain/usecases/get_notes.dart';
 
-class FakeNoteRepository implements NoteRepository {
-  FakeNoteRepository({this.items = const [], this.fail = false});
-
-  final List<Note> items;
-  final bool fail;
-
-  @override
-  Future<({List<Note> notes, Failure? failure})> fetchNotes() async {
-    if (fail) {
-      return (
-        notes: const <Note>[],
-        failure: const LocalFailure('db locked (simulasi)'),
-      );
-    }
-    return (notes: items, failure: null);
-  }
-
-  @override
-  Future<({Note? note, Failure? failure})> addNote({
-    required String title,
-    String body = '',
-  }) {
-    throw UnimplementedError();
-  }
-}
+import 'support/fake_note_repository.dart';
 
 void main() {
   test('GetNotes meneruskan daftar dari repository', () async {
-    final repo = FakeNoteRepository(items: [
-      Note(title: 'A', updatedAt: DateTime(2026, 9, 27)),
-    ]);
+    final repo = FakeNoteRepository(
+      items: [Note(title: 'A', updatedAt: DateTime(2026, 9, 27))],
+    );
     final result = await GetNotes(repo).call();
     expect(result.failure, isNull);
     expect(result.notes.length, 1);

@@ -4,18 +4,18 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
-
 void configureDatabaseFactory() {
   if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
+    databaseFactory = databaseFactoryFfiWebNoWebWorker;
   }
 }
 
-
 Future<Database> openAppDb() async {
-  final dir = await getDatabasesPath();
+  final path = kIsWeb
+      ? 'offline_notes.db'
+      : p.join(await getDatabasesPath(), 'offline_notes.db');
   return openDatabase(
-    p.join(dir, 'offline_notes.db'),
+    path,
     version: 1,
     onCreate: (db, version) async {
       await db.execute('''
@@ -37,7 +37,6 @@ Future<Database> openAppDb() async {
     },
   );
 }
-
 
 final appDatabaseProvider = Provider<Future<Database> Function()>(
   (ref) => openAppDb,
