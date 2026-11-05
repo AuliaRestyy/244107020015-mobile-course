@@ -127,6 +127,11 @@ class NotesPage extends ConsumerWidget {
             ),
           ),
           IconButton(
+            tooltip: 'Chat AI',
+            onPressed: () => context.go(AppRoutes.chat),
+            icon: const Icon(Icons.chat_bubble_outline),
+          ),
+          IconButton(
             tooltip: 'Cache posts',
             onPressed: () => context.go(AppRoutes.postsCache),
             icon: const Icon(Icons.cloud_outlined),
