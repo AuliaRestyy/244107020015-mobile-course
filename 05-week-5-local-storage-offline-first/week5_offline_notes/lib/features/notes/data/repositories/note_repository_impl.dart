@@ -11,16 +11,52 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   late final Future<Database> Function() _openDb;
+  List<Note>? _cache;
+
+  void _upsertCache(Note note) {
+    final current = _cache;
+    if (current == null) return;
+    final next = <Note>[
+      for (final existing in current)
+        if (existing.id != note.id) existing,
+      note,
+    ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    _cache = List<Note>.unmodifiable(next);
+  }
+
+  void _markCacheSynced() {
+    final current = _cache;
+    if (current == null) return;
+    _cache = List<Note>.unmodifiable([
+      for (final note in current)
+        if (note.dirty)
+          Note(
+            id: note.id,
+            title: note.title,
+            body: note.body,
+            updatedAt: note.updatedAt,
+            dirty: false,
+          )
+        else
+          note,
+    ]);
+  }
 
   @override
   Future<({List<Note> notes, Failure? failure})> fetchNotes() async {
+    final cached = _cache;
+    if (cached != null) {
+      return (notes: cached, failure: null);
+    }
+
     try {
       final db = await _openDb();
       final rows = await db.query('notes', orderBy: 'updated_at DESC');
-      return (
-        notes: rows.map(NoteModel.fromMap).map((m) => m.toEntity()).toList(),
-        failure: null,
+      final notes = List<Note>.unmodifiable(
+        rows.map((row) => NoteModel.fromMap(row).toEntity()),
       );
+      _cache = notes;
+      return (notes: notes, failure: null);
     } catch (e) {
       return (
         notes: const <Note>[],
@@ -31,6 +67,14 @@ class NoteRepositoryImpl implements NoteRepository {
 
   @override
   Future<({Note? note, Failure? failure})> getNote(int id) async {
+    final cached = _cache;
+    if (cached != null) {
+      for (final note in cached) {
+        if (note.id == id) return (note: note, failure: null);
+      }
+      return (note: null, failure: null);
+    }
+
     try {
       final db = await _openDb();
       final rows =
@@ -56,16 +100,15 @@ class NoteRepositoryImpl implements NoteRepository {
         dirty: true,
       );
       final id = await db.insert('notes', model.toMap());
-      return (
-        note: NoteModel(
-          id: id,
-          title: model.title,
-          body: model.body,
-          updatedAt: model.updatedAt,
-          dirty: true,
-        ).toEntity(),
-        failure: null,
-      );
+      final created = NoteModel(
+        id: id,
+        title: model.title,
+        body: model.body,
+        updatedAt: model.updatedAt,
+        dirty: true,
+      ).toEntity();
+      _upsertCache(created);
+      return (note: created, failure: null);
     } catch (e) {
       return (note: null, failure: LocalFailure('Gagal menyimpan catatan: $e'));
     }
@@ -91,16 +134,15 @@ class NoteRepositoryImpl implements NoteRepository {
         where: 'id = ?',
         whereArgs: [id],
       );
-      return (
-        note: NoteModel(
-          id: id,
-          title: title,
-          body: body,
-          updatedAt: updatedAt,
-          dirty: true,
-        ).toEntity(),
-        failure: null,
-      );
+      final updated = NoteModel(
+        id: id,
+        title: title,
+        body: body,
+        updatedAt: updatedAt,
+        dirty: true,
+      ).toEntity();
+      _upsertCache(updated);
+      return (note: updated, failure: null);
     } catch (e) {
       return (
         note: null,
@@ -114,6 +156,12 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await _openDb();
       await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+      final cached = _cache;
+      if (cached != null) {
+        _cache = List<Note>.unmodifiable(
+          cached.where((note) => note.id != id),
+        );
+      }
       return (ok: true, failure: null);
     } catch (e) {
       return (ok: false, failure: LocalFailure('Gagal menghapus catatan: $e'));
@@ -143,6 +191,7 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final db = await _openDb();
       await db.update('notes', {'dirty': 0}, where: 'dirty = 1');
+      _markCacheSynced();
       return (ok: true, failure: null);
     } catch (e) {
       return (

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../providers/notes_providers.dart';
 
 class NotesSearchField extends ConsumerStatefulWidget {
@@ -20,8 +19,8 @@ class _NotesSearchFieldState extends ConsumerState<NotesSearchField> {
   }
 
   void _onChanged(String value) {
+    // Tanpa debounce: hasil pencarian tetap langsung mengikuti input.
     ref.read(searchQueryProvider.notifier).setQuery(value);
-    setState(() {});
   }
 
   void _clear() {
@@ -40,13 +39,17 @@ class _NotesSearchFieldState extends ConsumerState<NotesSearchField> {
         decoration: InputDecoration(
           hintText: 'Cari judul catatan',
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: _controller.text.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Kosongkan pencarian',
-                  onPressed: _clear,
-                  icon: const Icon(Icons.clear),
-                ),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _controller,
+            builder: (context, value, _) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: 'Kosongkan pencarian',
+                onPressed: _clear,
+                icon: const Icon(Icons.clear),
+              );
+            },
+          ),
           border: const OutlineInputBorder(),
           isDense: true,
         ),

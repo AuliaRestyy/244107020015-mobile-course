@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/format.dart';
 import '../providers/notes_providers.dart';
+import '../widgets/note_editor_dialog.dart';
 
 class NoteDetailPage extends ConsumerWidget {
   const NoteDetailPage({super.key, required this.id});
@@ -14,55 +15,20 @@ class NoteDetailPage extends ConsumerWidget {
     String title,
     String body,
   }) note) async {
-    final titleController = TextEditingController(text: note.title);
-    final bodyController = TextEditingController(text: note.body);
-    final formKey = GlobalKey<FormState>();
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Edit catatan'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Judul'),
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty) ? 'Judul wajib' : null,
-              ),
-              TextFormField(
-                controller: bodyController,
-                decoration: const InputDecoration(labelText: 'Isi'),
-                maxLines: 8,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(dialogContext).pop(true);
-              }
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+    final edited = await showNoteEditorDialog(
+      context,
+      initialTitle: note.title,
+      initialBody: note.body,
+      isEditing: true,
+      bodyMaxLines: 8,
+      autofocusTitle: false,
     );
+    if (edited == null) return;
 
-    if (saved != true) return;
     await ref.read(notesProvider.notifier).updateNote(
           id: id,
-          title: titleController.text.trim(),
-          body: bodyController.text,
+          title: edited.title,
+          body: edited.body,
         );
     ref.invalidate(noteProvider(id));
   }

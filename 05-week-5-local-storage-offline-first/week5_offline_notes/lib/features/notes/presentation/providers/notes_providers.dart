@@ -33,12 +33,15 @@ class NotesNotifier extends AsyncNotifier<List<Note>> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final result = await ref.read(getNotesProvider).call();
-      if (result.failure != null) throw Exception(result.failure!.message);
-      return result.notes;
-    });
+    final result = await ref.read(getNotesProvider).call();
+    if (result.failure != null) {
+      state = AsyncError(
+        Exception(result.failure!.message),
+        StackTrace.current,
+      );
+      return;
+    }
+    state = AsyncData(result.notes);
   }
 
   Future<void> addNote({required String title, String body = ''}) async {
@@ -85,7 +88,9 @@ class SearchQueryNotifier extends Notifier<String> {
   @override
   String build() => '';
 
-  void setQuery(String value) => state = value;
+  void setQuery(String value) {
+    state = value;
+  }
 }
 
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(

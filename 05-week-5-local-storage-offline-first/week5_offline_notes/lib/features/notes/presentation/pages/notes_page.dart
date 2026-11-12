@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/providers.dart';
 import '../../../../routes.dart';
 import '../providers/notes_providers.dart';
+import '../widgets/note_editor_dialog.dart';
 import '../widgets/note_tile.dart';
 import '../widgets/notes_empty_state.dart';
 import '../widgets/notes_search_field.dart';
@@ -48,84 +49,34 @@ class NotesPage extends ConsumerWidget {
     String initialTitle = '',
     String initialBody = '',
   }) async {
-    final titleController = TextEditingController(text: initialTitle);
-    final bodyController = TextEditingController(text: initialBody);
-    final formKey = GlobalKey<FormState>();
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(noteId == null ? 'Catatan baru' : 'Edit catatan'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Judul'),
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? 'Judul wajib'
-                    : null,
-              ),
-              TextFormField(
-                controller: bodyController,
-                decoration: const InputDecoration(labelText: 'Isi'),
-                maxLines: 4,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(dialogContext).pop(true);
-              }
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+    final edited = await showNoteEditorDialog(
+      context,
+      initialTitle: initialTitle,
+      initialBody: initialBody,
+      isEditing: noteId != null,
     );
+    if (edited == null) return;
 
-    if (saved != true) return;
-    final title = titleController.text.trim();
-    final body = bodyController.text;
     final notifier = ref.read(notesProvider.notifier);
     if (noteId == null) {
-      await notifier.addNote(title: title, body: body);
+      await notifier.addNote(title: edited.title, body: edited.body);
     } else {
-      await notifier.updateNote(id: noteId, title: title, body: body);
+      await notifier.updateNote(
+        id: noteId,
+        title: edited.title,
+        body: edited.body,
+      );
       ref.invalidate(noteProvider(noteId));
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notes = ref.watch(filteredNotesProvider);
-    final dirtyCount = ref.watch(dirtyCountProvider).value ?? 0;
-    final offline = ref.watch(forceOfflineProvider);
-    final query = ref.watch(searchQueryProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catatan Offline'),
         actions: [
-          IconButton(
-            tooltip: 'Sinkronkan antrean dirty',
-            onPressed: () => _sync(context, ref),
-            icon: Badge(
-              isLabelVisible: dirtyCount > 0,
-              label: Text('$dirtyCount'),
-              child: const Icon(Icons.sync),
-            ),
-          ),
+          _SyncBadgeButton(onPressed: () => _sync(context, ref)),
           IconButton(
             tooltip: 'Chat AI',
             onPressed: () => context.go(AppRoutes.chat),
@@ -145,48 +96,14 @@ class NotesPage extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (offline)
-            Material(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: ListTile(
-                leading: const Icon(Icons.wifi_off),
-                title: const Text('Mode offline (simulasi) aktif'),
-                subtitle: const Text(
-                  'Baca/tulis catatan tetap berfungsi penuh; '
-                  'sinkronisasi & refresh posts ditunda.',
-                ),
-              ),
-            ),
+          const _OfflineBanner(),
           const NotesSearchField(),
           Expanded(
-            child: notes.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _ErrorView(error: error),
-              data: (items) {
-                if (items.isEmpty) {
-                  return NotesEmptyState(query: query);
-                }
-                return ListView.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final note = items[index];
-                    return NoteTile(
-                      note: note,
-                      onTap: () => context.go(AppRoutes.noteDetail(note.id!)),
-                      onDelete: () async {
-                        await ref
-                            .read(notesProvider.notifier)
-                            .deleteNote(note.id!);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Catatan dihapus.')),
-                          );
-                        }
-                      },
-                    );
-                  },
-                );
+            child: RefreshIndicator(
+              onRefresh: () {
+                return ref.read(notesProvider.notifier).refresh();
               },
+              child: const _NotesListSection(),
             ),
           ),
         ],
@@ -195,6 +112,107 @@ class NotesPage extends ConsumerWidget {
         onPressed: () => _showEditor(context, ref),
         tooltip: 'Catatan baru',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _SyncBadgeButton extends ConsumerWidget {
+  const _SyncBadgeButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dirtyCount = ref.watch(
+      dirtyCountProvider.select((value) => value.value ?? 0),
+    );
+    return IconButton(
+      tooltip: 'Sinkronkan antrean dirty',
+      onPressed: onPressed,
+      icon: Badge(
+        isLabelVisible: dirtyCount > 0,
+        label: Text('$dirtyCount'),
+        child: const Icon(Icons.sync),
+      ),
+    );
+  }
+}
+
+class _OfflineBanner extends ConsumerWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final offline = ref.watch(forceOfflineProvider);
+    if (!offline) return const SizedBox.shrink();
+    return Material(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: const ListTile(
+        leading: Icon(Icons.wifi_off),
+        title: Text('Mode offline (simulasi) aktif'),
+        subtitle: Text(
+          'Baca/tulis catatan tetap berfungsi penuh; '
+          'sinkronisasi & refresh posts ditunda.',
+        ),
+      ),
+    );
+  }
+}
+
+class _NotesListSection extends ConsumerWidget {
+  const _NotesListSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notes = ref.watch(filteredNotesProvider);
+
+    return notes.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _ErrorView(error: error),
+      data: (items) {
+        if (items.isEmpty) {
+          return const _EmptyStateSection();
+        }
+        return ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          addAutomaticKeepAlives: false,
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final note = items[index];
+            return NoteTile(
+              key: ValueKey(note.id),
+              note: note,
+              onTap: () => context.go(AppRoutes.noteDetail(note.id!)),
+              onDelete: () async {
+                await ref.read(notesProvider.notifier).deleteNote(note.id!);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Catatan dihapus.')),
+                  );
+                }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _EmptyStateSection extends ConsumerWidget {
+  const _EmptyStateSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final query = ref.watch(searchQueryProvider.select((q) => q.trim()));
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: NotesEmptyState(query: query),
+        ),
       ),
     );
   }

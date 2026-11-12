@@ -5,9 +5,17 @@ import 'database/app_database.dart';
 import 'features/settings/presentation/providers/settings_providers.dart';
 import 'routes.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   configureDatabaseFactory();
-  runApp(const ProviderScope(child: MyApp()));
+
+  final container = ProviderContainer();
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerStatefulWidget {
