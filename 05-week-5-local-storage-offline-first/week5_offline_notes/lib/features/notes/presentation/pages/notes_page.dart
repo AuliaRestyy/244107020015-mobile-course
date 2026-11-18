@@ -109,6 +109,7 @@ class NotesPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('add-note-fab'),
         onPressed: () => _showEditor(context, ref),
         tooltip: 'Catatan baru',
         child: const Icon(Icons.add),
@@ -128,6 +129,7 @@ class _SyncBadgeButton extends ConsumerWidget {
       dirtyCountProvider.select((value) => value.value ?? 0),
     );
     return IconButton(
+      key: const ValueKey('sync-button'),
       tooltip: 'Sinkronkan antrean dirty',
       onPressed: onPressed,
       icon: Badge(

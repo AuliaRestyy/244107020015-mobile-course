@@ -33,6 +33,7 @@ class _NotesSearchFieldState extends ConsumerState<NotesSearchField> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       child: TextField(
+        key: const ValueKey('notes-search-field'),
         controller: _controller,
         onChanged: _onChanged,
         textInputAction: TextInputAction.search,

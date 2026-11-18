@@ -75,6 +75,8 @@ class NotesNotifier extends AsyncNotifier<List<Note>> {
 
   Future<({int synced, Failure? failure})> syncNotes() async {
     final result = await ref.read(syncNotesProvider).call();
+    await refresh();
+    ref.invalidate(noteProvider);
     await ref.read(dirtyCountProvider.notifier).refresh();
     return result;
   }

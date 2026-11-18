@@ -66,6 +66,7 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
+              key: const ValueKey('note-title-field'),
               controller: _titleController,
               autofocus: widget.autofocusTitle,
               decoration: const InputDecoration(labelText: 'Judul'),
@@ -86,7 +87,11 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Batal'),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Simpan')),
+        FilledButton(
+          key: const ValueKey('note-save-button'),
+          onPressed: _submit,
+          child: const Text('Simpan'),
+        ),
       ],
     );
   }
