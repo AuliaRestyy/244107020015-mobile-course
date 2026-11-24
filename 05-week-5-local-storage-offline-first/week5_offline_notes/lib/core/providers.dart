@@ -7,5 +7,6 @@ class ForceOfflineNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final forceOfflineProvider =
-    NotifierProvider<ForceOfflineNotifier, bool>(ForceOfflineNotifier.new);
+final forceOfflineProvider = NotifierProvider<ForceOfflineNotifier, bool>(
+  ForceOfflineNotifier.new,
+);

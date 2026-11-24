@@ -10,10 +10,10 @@ class PostModel extends Post {
   });
 
   Map<String, Object?> toCacheMap() => {
-        'id': id,
-        'payload': jsonEncode({'title': title, 'body': body}),
-        'cached_at': DateTime.now().toUtc().toIso8601String(),
-      };
+    'id': id,
+    'payload': jsonEncode({'title': title, 'body': body}),
+    'cached_at': DateTime.now().toUtc().toIso8601String(),
+  };
 
   factory PostModel.fromCacheMap(Map<String, Object?> map) {
     Object? decoded;

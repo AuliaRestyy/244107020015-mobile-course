@@ -93,8 +93,9 @@ void main() {
     await tester.tap(find.text('Batal'));
   });
 
-  testWidgets('Simpan mengembalikan judul ter-trim dan isi apa adanya',
-      (tester) async {
+  testWidgets('Simpan mengembalikan judul ter-trim dan isi apa adanya', (
+    tester,
+  ) async {
     NoteEditorResult? captured;
     await tester.pumpWidget(
       MaterialApp(
@@ -124,8 +125,9 @@ void main() {
     expect(captured!.body, ' isi dengan spasi ');
   });
 
-  testWidgets('controller dibuang setiap dialog ditutup (tanpa kebocoran)',
-      (tester) async {
+  testWidgets('controller dibuang setiap dialog ditutup (tanpa kebocoran)', (
+    tester,
+  ) async {
     // Membuka/menutup dialog berkali-kali harus melepas State & controller.
     // Bila dispose tidak dipanggil, Flutter melempar error pada pumpAndSettle
     // berikutnya karena ChangeNotifier masih punya listener.

@@ -230,7 +230,6 @@ void main() {
           ],
         })}\n\n';
 
-
     final split = sse.indexOf('dunia') + 4;
     final repo = GeminiAiRepository(
       apiKeyStore: FakeApiKeyStore(FakeApiKeyStore.fakeKey),

@@ -88,10 +88,7 @@ class FakeNoteRepository implements NoteRepository {
     countDirtyCount++;
     final fail = failure;
     if (fail != null) return (count: 0, failure: fail);
-    return (
-      count: _items.where((note) => note.dirty).length,
-      failure: null,
-    );
+    return (count: _items.where((note) => note.dirty).length, failure: null);
   }
 
   @override

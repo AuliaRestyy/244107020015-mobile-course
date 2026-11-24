@@ -10,12 +10,7 @@ Future<void> main() async {
   configureDatabaseFactory();
 
   final container = ProviderContainer();
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const MyApp(),
-    ),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -29,9 +24,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(prefsRepositoryProvider).markOpenedNow(),
-    );
+    Future.microtask(() => ref.read(prefsRepositoryProvider).markOpenedNow());
   }
 
   @override

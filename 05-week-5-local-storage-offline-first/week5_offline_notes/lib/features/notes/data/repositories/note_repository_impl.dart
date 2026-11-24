@@ -77,8 +77,12 @@ class NoteRepositoryImpl implements NoteRepository {
 
     try {
       final db = await _openDb();
-      final rows =
-          await db.query('notes', where: 'id = ?', whereArgs: [id], limit: 1);
+      final rows = await db.query(
+        'notes',
+        where: 'id = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
       if (rows.isEmpty) return (note: null, failure: null);
       return (note: NoteModel.fromMap(rows.first).toEntity(), failure: null);
     } catch (e) {
@@ -158,9 +162,7 @@ class NoteRepositoryImpl implements NoteRepository {
       await db.delete('notes', where: 'id = ?', whereArgs: [id]);
       final cached = _cache;
       if (cached != null) {
-        _cache = List<Note>.unmodifiable(
-          cached.where((note) => note.id != id),
-        );
+        _cache = List<Note>.unmodifiable(cached.where((note) => note.id != id));
       }
       return (ok: true, failure: null);
     } catch (e) {
@@ -172,12 +174,10 @@ class NoteRepositoryImpl implements NoteRepository {
   Future<({int count, Failure? failure})> countDirty() async {
     try {
       final db = await _openDb();
-      final rows =
-          await db.rawQuery('SELECT COUNT(*) AS c FROM notes WHERE dirty = 1');
-      return (
-        count: ((rows.first['c'] as num?)?.toInt() ?? 0),
-        failure: null,
+      final rows = await db.rawQuery(
+        'SELECT COUNT(*) AS c FROM notes WHERE dirty = 1',
       );
+      return (count: ((rows.first['c'] as num?)?.toInt() ?? 0), failure: null);
     } catch (e) {
       return (
         count: 0,

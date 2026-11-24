@@ -31,7 +31,10 @@ void main() {
     final chip = find.text('Belum tersinkron');
     expect(
       find.descendant(
-        of: find.ancestor(of: find.text(title), matching: find.byType(NoteTile)),
+        of: find.ancestor(
+          of: find.text(title),
+          matching: find.byType(NoteTile),
+        ),
         matching: chip,
       ),
       findsOneWidget,

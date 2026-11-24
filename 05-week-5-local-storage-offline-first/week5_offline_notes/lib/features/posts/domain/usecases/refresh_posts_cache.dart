@@ -6,7 +6,9 @@ class RefreshPostsCache {
 
   final PostRepository _repository;
 
-  Future<({bool changed, Failure? failure})> call({bool offline = false}) async {
+  Future<({bool changed, Failure? failure})> call({
+    bool offline = false,
+  }) async {
     if (offline) return (changed: false, failure: null);
     try {
       return await _repository.refreshCache();

@@ -52,26 +52,15 @@ void main() {
     expect(find.text('Belanja mingguan'), findsOneWidget);
     expect(find.text('Rapat kampus'), findsOneWidget);
     expect(find.byIcon(Icons.note_alt_outlined), findsNothing);
-    expect(
-      find.byKey(const ValueKey('add-note-fab')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('add-note-fab')), findsOneWidget);
     expect(find.byKey(const ValueKey('sync-button')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('notes-search-field')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('notes-search-field')), findsOneWidget);
     expect(repository.fetchCount, greaterThanOrEqualTo(1));
   });
 
-  testWidgets('search "zzz" menampilkan empty state pencarian', (
-    tester,
-  ) async {
+  testWidgets('search "zzz" menampilkan empty state pencarian', (tester) async {
     final repository = FakeNoteRepository(
-      items: [
-        _note(1, 'Belanja mingguan'),
-        _note(2, 'Rapat kampus'),
-      ],
+      items: [_note(1, 'Belanja mingguan'), _note(2, 'Rapat kampus')],
     );
 
     await _pumpNotesPage(tester, repository);
@@ -85,10 +74,7 @@ void main() {
 
     expect(find.text('Belanja mingguan'), findsNothing);
     expect(find.byIcon(Icons.search_off), findsOneWidget);
-    expect(
-      find.textContaining('Tidak ada catatan yang cocok'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Tidak ada catatan yang cocok'), findsOneWidget);
   });
 
   testWidgets('sync saat forceOffline menampilkan snackbar ditunda', (
@@ -101,7 +87,10 @@ void main() {
     final container = await _pumpNotesPage(tester, repository);
     container.read(forceOfflineProvider.notifier).toggle();
     await tester.pumpAndSettle();
-    expect(find.textContaining('Mode offline (simulasi) aktif'), findsOneWidget);
+    expect(
+      find.textContaining('Mode offline (simulasi) aktif'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const ValueKey('sync-button')));
     await tester.pumpAndSettle();
@@ -124,10 +113,7 @@ void main() {
 
     expect(find.byIcon(Icons.error_outline), findsOneWidget);
     expect(find.textContaining('Gagal memuat catatan'), findsOneWidget);
-    expect(
-      find.textContaining('db locked (simulasi)'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('db locked (simulasi)'), findsOneWidget);
     expect(find.byIcon(Icons.note_alt_outlined), findsNothing);
   });
 }

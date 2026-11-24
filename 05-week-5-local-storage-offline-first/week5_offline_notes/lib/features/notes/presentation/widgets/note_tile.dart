@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/format.dart';
 import '../../domain/entities/note.dart';
 
