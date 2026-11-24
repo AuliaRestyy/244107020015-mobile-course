@@ -133,36 +133,41 @@ void main() {
     expect(container.read(postsProvider).hasError, isFalse);
   });
 
-  test('refresh sukses dengan data berbeda: cache diperbarui dan tampil',
-      () async {
-    final repository = _FakePostRepository(
-      cache: const [Post(id: 1, title: 'Judul lama', body: 'isi lama')],
-      refreshResult: const [
-        Post(id: 1, title: 'Judul baru', body: 'isi baru'),
-        Post(id: 2, title: 'Post tambahan', body: 'isi tambahan'),
-      ],
-    );
-    final container = makeContainer(repository);
-    final sub = container.listen(postsProvider, (_, _) {});
-    addTearDown(sub.close);
+  test(
+    'refresh sukses dengan data berbeda: cache diperbarui dan tampil',
+    () async {
+      final repository = _FakePostRepository(
+        cache: const [Post(id: 1, title: 'Judul lama', body: 'isi lama')],
+        refreshResult: const [
+          Post(id: 1, title: 'Judul baru', body: 'isi baru'),
+          Post(id: 2, title: 'Post tambahan', body: 'isi tambahan'),
+        ],
+      );
+      final container = makeContainer(repository);
+      final sub = container.listen(postsProvider, (_, _) {});
+      addTearDown(sub.close);
 
-    final first = await container.read(postsProvider.future);
-    expect(first.single.title, 'Judul lama');
+      final first = await container.read(postsProvider.future);
+      expect(first.single.title, 'Judul lama');
 
-    await waitForRefresh(repository);
-    final updated = await waitForPosts(
-      container,
-      (posts) => posts.any((post) => post.title == 'Judul baru'),
-    );
+      await waitForRefresh(repository);
+      final updated = await waitForPosts(
+        container,
+        (posts) => posts.any((post) => post.title == 'Judul baru'),
+      );
 
-    expect(updated.map((post) => post.title), ['Judul baru', 'Post tambahan']);
-    // Cache repositori ikut berubah, bukan hanya state provider.
-    final cached = await repository.readCache();
-    expect(cached.posts.map((post) => post.title), [
-      'Judul baru',
-      'Post tambahan',
-    ]);
-    expect(repository.refreshCount, greaterThanOrEqualTo(1));
-    expect(container.read(postsProvider).hasError, isFalse);
-  });
+      expect(updated.map((post) => post.title), [
+        'Judul baru',
+        'Post tambahan',
+      ]);
+      // Cache repositori ikut berubah, bukan hanya state provider.
+      final cached = await repository.readCache();
+      expect(cached.posts.map((post) => post.title), [
+        'Judul baru',
+        'Post tambahan',
+      ]);
+      expect(repository.refreshCount, greaterThanOrEqualTo(1));
+      expect(container.read(postsProvider).hasError, isFalse);
+    },
+  );
 }

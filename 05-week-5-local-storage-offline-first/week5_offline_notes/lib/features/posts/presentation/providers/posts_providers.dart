@@ -25,19 +25,21 @@ class PostsRevisionNotifier extends Notifier<int> {
   void bump() => state += 1;
 }
 
-final postsRevisionProvider =
-    NotifierProvider<PostsRevisionNotifier, int>(PostsRevisionNotifier.new);
+final postsRevisionProvider = NotifierProvider<PostsRevisionNotifier, int>(
+  PostsRevisionNotifier.new,
+);
 
 final postsProvider = FutureProvider<List<Post>>((ref) async {
-  ref.watch(postsRevisionProvider); 
+  ref.watch(postsRevisionProvider);
   final repository = ref.watch(postRepositoryProvider);
   final cached = await repository.readCache();
   if (cached.failure != null) throw Exception(cached.failure!.message);
 
   final offline = ref.watch(forceOfflineProvider);
   unawaited(() async {
-    final refreshed =
-        await ref.read(refreshPostsCacheProvider).call(offline: offline);
+    final refreshed = await ref
+        .read(refreshPostsCacheProvider)
+        .call(offline: offline);
     if (refreshed.failure != null) {
       debugPrintIfDebug(refreshed.failure!.message);
       return;

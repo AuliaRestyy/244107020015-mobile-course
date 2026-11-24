@@ -54,31 +54,35 @@ void main() {
     await db.close();
   });
 
-  test('addNote lalu syncNotes tidak menyisakan catatan dirty di notesProvider',
-      () async {
-    await container.read(notesProvider.future);
+  test(
+    'addNote lalu syncNotes tidak menyisakan catatan dirty di notesProvider',
+    () async {
+      await container.read(notesProvider.future);
 
-    final notifier = container.read(notesProvider.notifier);
-    await notifier.addNote(title: 'Catatan A', body: 'isi A');
-    await notifier.addNote(title: 'Catatan B', body: 'isi B');
+      final notifier = container.read(notesProvider.notifier);
+      await notifier.addNote(title: 'Catatan A', body: 'isi A');
+      await notifier.addNote(title: 'Catatan B', body: 'isi B');
 
-    expect(container.read(notesProvider).requireValue.where((n) => n.dirty),
-        hasLength(2));
-    expect(await container.read(dirtyCountProvider.future), 2);
+      expect(
+        container.read(notesProvider).requireValue.where((n) => n.dirty),
+        hasLength(2),
+      );
+      expect(await container.read(dirtyCountProvider.future), 2);
 
-    await notifier.syncNotes();
+      await notifier.syncNotes();
 
-    final rows = await db.rawQuery(
-      'SELECT COUNT(*) AS c FROM notes WHERE dirty = 1',
-    );
-    expect(rows.first['c'], 0, reason: 'DB masih punya baris dirty');
+      final rows = await db.rawQuery(
+        'SELECT COUNT(*) AS c FROM notes WHERE dirty = 1',
+      );
+      expect(rows.first['c'], 0, reason: 'DB masih punya baris dirty');
 
-    final notes = container.read(notesProvider).requireValue;
-    expect(notes, hasLength(2));
-    expect(
-      notes.where((note) => note.dirty).map((note) => note.title).toList(),
-      isEmpty,
-      reason: 'notesProvider masih memegang catatan dirty setelah sync',
-    );
-  });
+      final notes = container.read(notesProvider).requireValue;
+      expect(notes, hasLength(2));
+      expect(
+        notes.where((note) => note.dirty).map((note) => note.title).toList(),
+        isEmpty,
+        reason: 'notesProvider masih memegang catatan dirty setelah sync',
+      );
+    },
+  );
 }

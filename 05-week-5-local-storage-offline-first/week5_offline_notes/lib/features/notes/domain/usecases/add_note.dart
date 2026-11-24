@@ -10,6 +10,5 @@ class AddNote {
   Future<({Note? note, Failure? failure})> call({
     required String title,
     String body = '',
-  }) =>
-      _repository.addNote(title: title, body: body);
+  }) => _repository.addNote(title: title, body: body);
 }

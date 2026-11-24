@@ -13,7 +13,7 @@ class FakeHttpClientAdapter implements HttpClientAdapter {
   final List<String> chunks;
   final int statusCode;
   final DioException? error;
-  
+
   RequestOptions? lastRequest;
   int callCount = 0;
 

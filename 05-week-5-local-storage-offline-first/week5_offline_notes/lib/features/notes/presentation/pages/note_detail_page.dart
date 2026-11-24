@@ -11,10 +11,11 @@ class NoteDetailPage extends ConsumerWidget {
 
   final int id;
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, ({
-    String title,
-    String body,
-  }) note) async {
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    ({String title, String body}) note,
+  ) async {
     final edited = await showNoteEditorDialog(
       context,
       initialTitle: note.title,
@@ -25,11 +26,9 @@ class NoteDetailPage extends ConsumerWidget {
     );
     if (edited == null) return;
 
-    await ref.read(notesProvider.notifier).updateNote(
-          id: id,
-          title: edited.title,
-          body: edited.body,
-        );
+    await ref
+        .read(notesProvider.notifier)
+        .updateNote(id: id, title: edited.title, body: edited.body);
     ref.invalidate(noteProvider(id));
   }
 
@@ -69,11 +68,7 @@ class NoteDetailPage extends ConsumerWidget {
             onPressed: () {
               final note = noteAsync.value;
               if (note == null) return;
-              _edit(
-                context,
-                ref,
-                (title: note.title, body: note.body),
-              );
+              _edit(context, ref, (title: note.title, body: note.body));
             },
             icon: const Icon(Icons.edit_outlined),
           ),
@@ -113,8 +108,7 @@ class NoteDetailPage extends ConsumerWidget {
                       Chip(
                         label: const Text('Belum tersinkron'),
                         visualDensity: VisualDensity.compact,
-                        backgroundColor:
-                            theme.colorScheme.tertiaryContainer,
+                        backgroundColor: theme.colorScheme.tertiaryContainer,
                       ),
                   ],
                 ),

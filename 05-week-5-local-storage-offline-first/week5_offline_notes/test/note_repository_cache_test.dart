@@ -160,28 +160,30 @@ void main() {
     expect(() => notes.add(notes.first), throwsUnsupportedError);
   });
 
-  test('failure tidak mengisi cache sehingga percobaan berikut membaca tabel',
-      () async {
-    var failNext = true;
-    final flaky = NoteRepositoryImpl(
-      openDb: () async {
-        if (failNext) throw StateError('db locked');
-        return db;
-      },
-    );
+  test(
+    'failure tidak mengisi cache sehingga percobaan berikut membaca tabel',
+    () async {
+      var failNext = true;
+      final flaky = NoteRepositoryImpl(
+        openDb: () async {
+          if (failNext) throw StateError('db locked');
+          return db;
+        },
+      );
 
-    final failed = await flaky.fetchNotes();
-    expect(failed.failure, isNotNull);
+      final failed = await flaky.fetchNotes();
+      expect(failed.failure, isNotNull);
 
-    failNext = false;
-    await db.insert('notes', {
-      'title': 'Setelah pulih',
-      'body': '',
-      'updated_at': DateTime(2026, 1, 3).toIso8601String(),
-      'dirty': 0,
-    });
-    final recovered = await flaky.fetchNotes();
-    expect(recovered.failure, isNull);
-    expect(recovered.notes.single.title, 'Setelah pulih');
-  });
+      failNext = false;
+      await db.insert('notes', {
+        'title': 'Setelah pulih',
+        'body': '',
+        'updated_at': DateTime(2026, 1, 3).toIso8601String(),
+        'dirty': 0,
+      });
+      final recovered = await flaky.fetchNotes();
+      expect(recovered.failure, isNull);
+      expect(recovered.notes.single.title, 'Setelah pulih');
+    },
+  );
 }

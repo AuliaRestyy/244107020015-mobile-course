@@ -26,7 +26,10 @@ class PostRepositoryImpl implements PostRepository {
       final db = await _openDb();
       final rows = await db.query('cached_posts', orderBy: 'id ASC');
       return (
-        posts: rows.map(PostModel.fromCacheMap).map((m) => m.toEntity()).toList(),
+        posts: rows
+            .map(PostModel.fromCacheMap)
+            .map((m) => m.toEntity())
+            .toList(),
         failure: null,
       );
     } catch (e) {

@@ -54,8 +54,7 @@ class SettingsPage extends ConsumerWidget {
               'baca/tulis catatan tetap berfungsi.',
             ),
             value: forceOffline,
-            onChanged: (_) =>
-                ref.read(forceOfflineProvider.notifier).toggle(),
+            onChanged: (_) => ref.read(forceOfflineProvider.notifier).toggle(),
           ),
           const Padding(
             padding: EdgeInsets.all(16),
